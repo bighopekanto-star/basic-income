@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIと雇用 - BI Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        background: '#F3F4F6',
+                        surface: '#FFFFFF',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-background text-gray-800 font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-surface shadow-sm sticky top-0 z-10 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-2xl">🏦</span>
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Basic Income Simulator</h1>
+            </div>
+            <nav class="flex gap-4">
+                <a href="index.html" class="text-gray-500 hover:text-primary transition-colors font-medium">シミュレーター</a>
+                <a href="learn.html" class="text-gray-500 hover:text-primary transition-colors font-medium">UBIを学ぶ</a>
+                <a href="ai_impact.html"
+                    class="text-primary hover:text-blue-700 transition-colors font-bold border-b-2 border-primary">AIと雇用</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <!-- Executive Summary -->
+        <section class="mb-12 bg-surface rounded-xl shadow-lg p-8 border border-gray-100">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">AIと雇用への影響: ベーシックインカムの位置づけ</h2>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r">
+                <h3 class="font-bold text-blue-900 mb-2">エグゼクティブ・サマリー</h3>
+                <p class="text-blue-800 mb-2">
+                    OECDやILOの分析によれば、AIは「単純な大量失業」ではなく、<strong>タスク構造の再編・所得分配の偏り</strong>をもたらします。
+                    雇用量そのものよりも、リスクの偏在が政策課題となり、ベーシックインカム等の所得保障が「下支え（セーフティネット）」として重要視されています。
+                </p>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <span
+                        class="bg-white px-2 py-1 rounded text-xs text-blue-600 border border-blue-200 font-bold">OECD推計:
+                        27%の仕事が高リスク</span>
+                    <span
+                        class="bg-white px-2 py-1 rounded text-xs text-blue-600 border border-blue-200 font-bold">ILO予測:
+                        仕事の「変容」がメイン</span>
+                    <span class="bg-white px-2 py-1 rounded text-xs text-blue-600 border border-blue-200 font-bold">リスク:
+                        中〜高技能層にも波及</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Status -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span class="bg-gray-200 text-gray-700 rounded-full p-2 mr-3 text-sm">1</span>
+                現状分析: AIは失業を増やしているか？
+            </h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-surface rounded-xl shadow p-6">
+                    <h4 class="font-bold text-lg mb-2">マクロ視点: まだ「崩壊」は起きていない</h4>
+                    <p class="text-gray-600 text-sm mb-4">
+                        OECD "Employment Outlook 2023" 等の分析では、現時点でAI露出度が高い職種でも、明確な雇用減少は確認されていません。
+                        しかし、タスクの内容や要求スキルは急速に変化しており、将来的な構造変化の予兆があります。
+                    </p>
+                </div>
+                <div class="bg-surface rounded-xl shadow p-6">
+                    <h4 class="font-bold text-lg mb-2">タスク視点: 「露出パラドックス」</h4>
+                    <p class="text-gray-600 text-sm mb-4">
+                        Autorらの研究によれば、AIの影響は職種により正反対になります。
+                    </p>
+                    <ul class="list-disc list-inside text-sm text-gray-600 ml-2 space-y-1">
+                        <li><strong>補完効果:</strong> ルーティン除去 → 専門業務集中 → 賃金上昇</li>
+                        <li><strong>代替効果:</strong> コア業務の奪取 → 汎用化 → 賃金停滞</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Future Risk -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span class="bg-gray-200 text-gray-700 rounded-full p-2 mr-3 text-sm">2</span>
+                中長期リスク予測
+            </h3>
+            <div class="bg-surface rounded-xl shadow p-8">
+                <div class="mb-6">
+                    <h4 class="text-xl font-bold mb-4">どの仕事がリスクに晒されるか？</h4>
+                    <div class="grid md:grid-cols-3 gap-4 text-center">
+                        <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                            <div class="text-2xl mb-2">🤖</div>
+                            <h5 class="font-bold text-red-800 mb-1">AIが得意 (高リスク)</h5>
+                            <p class="text-xs text-red-600 text-left px-2">
+                                ・パターン認識<br>
+                                ・文書作成・要約<br>
+                                ・ルールベース意思決定<br>
+                                ・情報照会対応
+                            </p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                            <div class="text-2xl mb-2">🤝</div>
+                            <h5 class="font-bold text-green-800 mb-1">人間が優位 (低リスク)</h5>
+                            <p class="text-xs text-green-600 text-left px-2">
+                                ・対人ケア・身体労働<br>
+                                ・複雑な交渉・組織運営<br>
+                                ・高度な現場判断<br>
+                                ・AIガバナンス
+                            </p>
+                        </div>
+                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                            <div class="text-2xl mb-2">⚖️</div>
+                            <h5 class="font-bold text-yellow-800 mb-1">影響は混合</h5>
+                            <p class="text-xs text-yellow-600 text-left px-2">
+                                ・プログラミング<br>
+                                ・簡易な法務・会計<br>
+                                ・知識労働全般<br>
+                                (補完と代替が混在)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">OECDの推計</h4>
+                    <p class="text-gray-600 mb-4">
+                        OECD諸国平均で<strong>約27%</strong>の仕事が「自動化リスクが高い」とされています。
+                        特にこれまでのロボット化と異なり、高学歴・高賃金のホワイトカラー職も射程に入っているのが特徴です。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Policy Response -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span class="bg-primary text-white rounded-full p-2 mr-3 text-sm">3</span>
+                政策対応とBIの役割
+            </h3>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="font-bold text-lg mb-4 text-gray-800">標準的対策パッケージ (4本柱)</h4>
+                    <ul class="space-y-3 text-sm text-gray-600">
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">1.</span>
+                            <span><strong>スキル・再訓練:</strong> デジタルリテラシー教育、リスキリング支援。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">2.</span>
+                            <span><strong>労働移動支援:</strong> マッチング、転職時の所得補填。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">3.</span>
+                            <span><strong>AI補完利用の促進:</strong> 「人+AI」の協働ガイドライン。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-primary font-bold mr-2">4.</span>
+                            <span class="font-bold text-gray-800 bg-blue-50 p-1 rounded">社会保障・所得保障の強化:
+                                雇用保険拡張、BI/NIT等の導入。</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-lg mb-4 text-primary">BIが果たす機能</h4>
+                    <ul class="space-y-3 text-sm text-gray-600">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span><strong>所得リスクへの対応:</strong> 交渉力が低下する層への下支え。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span><strong>オプション価値:</strong> 「嫌なら辞めて再訓練する」ための時間と資金の確保。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span><strong>再配置の円滑化:</strong> 衰退産業から成長産業への移動コストを緩和。</span>
+                        </li>
+                    </ul>
+                    <p class="mt-4 text-xs text-gray-500">
+                        ※ただし、BI単体ではスキル獲得は保証されないため、教育投資とのセット運用が推奨されます。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bibliography -->
+        <section class="mb-12 bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>📚</span> 参考文献・データソース (AI & Employment)
+            </h3>
+
+            <div class="h-96 overflow-y-auto pr-4 text-sm space-y-6">
+                <!-- International -->
+                <div>
+                    <h4 class="font-bold text-gray-700 bg-gray-50 p-2 rounded">🌍 国際機関 (OECD / ILO / UN)</h4>
+                    <ul class="list-disc list-inside text-blue-600 space-y-1 ml-2 mt-2">
+                        <li><a href="https://www.oecd.org/en/publications/oecd-employment-outlook-2023_08785bba-en/full-report/artificial-intelligence-and-jobs-no-signs-of-slowing-labour-market-transformation-55d48811-en.html"
+                                target="_blank" class="hover:underline">OECD Employment Outlook 2023 "Artificial
+                                intelligence and jobs"</a></li>
+                        <li><a href="https://www.oecd.org/en/topics/ai-and-work.html" target="_blank"
+                                class="hover:underline">OECD Portal "AI and Work"</a></li>
+                        <li><a href="https://sdgs.un.org/sites/default/files/2023-05/B59%20-%20Berg%20-%20Automation%20hits%20the%20knowledge%20worker%20ChatGPT%20and%20the%20future%20of%20work.pdf"
+                                target="_blank" class="hover:underline">ILO / UN DESA (2023) "Automation hits the
+                                knowledge worker"</a></li>
+                        <li><a href="https://wecglobal.org/uploads/2019/07/ILO-WESO-report-2023.pdf" target="_blank"
+                                class="hover:underline">ILO "World Employment and Social Outlook: Trends 2023"</a></li>
+                    </ul>
+                </div>
+
+                <!-- Academic -->
+                <div>
+                    <h4 class="font-bold text-gray-700 bg-gray-50 p-2 rounded">🎓 学術論文・調査レポート</h4>
+                    <ul class="list-disc list-inside text-blue-600 space-y-1 ml-2 mt-2">
+                        <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9127971/" target="_blank"
+                                class="hover:underline">"Artificial Intelligence and Employment: New Cross-Country
+                                Evidence" (2022)</a></li>
+                        <li><a href="https://budgetlab.yale.edu/research/evaluating-impact-ai-labor-market-current-state-affairs"
+                                target="_blank" class="hover:underline">Yale Budget Lab (2025) "Evaluating the Impact of
+                                AI"</a></li>
+                        <li><a href="https://hai.stanford.edu/news/assessing-the-real-impact-of-automation-on-jobs"
+                                target="_blank" class="hover:underline">Stanford HAI (Autor et al.) "Assessing the Real
+                                Impact of Automation"</a></li>
+                        <li><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5316265" target="_blank"
+                                class="hover:underline">SSRN "AI Job Displacement Analysis (2025–2030)"</a></li>
+                    </ul>
+                </div>
+
+                <!-- Government -->
+                <div>
+                    <h4 class="font-bold text-gray-700 bg-gray-50 p-2 rounded">🏛️ 政府・公的機関</h4>
+                    <ul class="list-disc list-inside text-blue-600 space-y-1 ml-2 mt-2">
+                        <li><a href="https://www.gov.uk/government/publications/assessment-of-ai-capabilities-and-the-impact-on-the-uk-labour-market/assessment-of-ai-capabilities-and-the-impact-on-the-uk-labour-market"
+                                target="_blank" class="hover:underline">UK Government "Assessment of AI capabilities and
+                                impact"</a></li>
+                    </ul>
+                </div>
+
+                <!-- News/Summary -->
+                <div>
+                    <h4 class="font-bold text-gray-700 bg-gray-50 p-2 rounded">📓 解説・サマリー記事</h4>
+                    <ul class="list-disc list-inside text-blue-600 space-y-1 ml-2 mt-2">
+                        <li><a href="https://www.cesi.org/posts/oecd-27-of-jobs-at-high-risk-from-ai" target="_blank"
+                                class="hover:underline">OECD: 27% of jobs at high risk (CESI Commentary)</a></li>
+                        <li><a href="https://note.com/ai_datamimi/n/nc07e40365be1" target="_blank"
+                                class="hover:underline">ILO関連解説「生成AIが変える『未来の仕事のかたち』」(Note)</a></li>
+                        <li><a href="https://www.innopharmaeducation.com/blog/the-impact-of-ai-on-job-roles-workforce-and-employment-what-you-need-to-know"
+                                target="_blank" class="hover:underline">Innopharma (2025) "The Impact of AI on Job
+                                Roles"</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back to Simulator -->
+        <div class="text-center">
+            <a href="index.html"
+                class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-blue-700 md:py-4 md:text-lg shadow-lg hover:shadow-xl transition-all">
+                シミュレーターへ戻る
+            </a>
+            <p class="mt-4 text-xs text-gray-400">
+                Created by: General Individual (Hobby Project) / 一般個人（趣味のシミュレーション作成）<br>
+                ※本ページの内容は公的機関のレポートを整理・要約したものであり、公式な見解ではありません。
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+            <p>&copy; 2026 Basic Income Simulator Project.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

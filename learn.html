@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ベーシックインカムを学ぶ - BI Simulator</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        background: '#F3F4F6',
+                        surface: '#FFFFFF',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- External Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-background text-gray-800 font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-surface shadow-sm sticky top-0 z-10 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-2xl">🏦</span>
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Basic Income Simulator</h1>
+            </div>
+            <nav class="flex gap-4">
+                <a href="index.html" class="text-gray-500 hover:text-primary transition-colors font-medium">シミュレーター</a>
+                <a href="learn.html"
+                    class="text-primary hover:text-blue-700 transition-colors font-bold border-b-2 border-primary">UBIを学ぶ</a>
+                <a href="ai_impact.html"
+                    class="text-gray-500 hover:text-primary transition-colors font-medium">AIと雇用</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <!-- Executive Summary -->
+        <section class="mb-12 bg-surface rounded-xl shadow-lg p-8 border border-gray-100">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">ベーシックインカム導入のメリット・デメリット分析</h2>
+                <p class="text-gray-500">学術的エビデンスに基づく包括分析レポート (2026年版)</p>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-primary p-4 rounded-r mb-8">
+                <h3 class="text-lg font-bold text-blue-900">エグゼクティブサマリー</h3>
+                <p class="text-blue-800 mt-2 font-medium">「UBIは貧困削減には効果的だが、経済成長への影響は限定的で、財政持続性に課題がある」</p>
+                <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div class="flex items-center"><span class="text-green-600 mr-2">●</span> 貧困率低下 (確実)</div>
+                    <div class="flex items-center"><span class="text-red-500 mr-2">●</span> 財政赤字 (深刻)</div>
+                    <div class="flex items-center"><span class="text-yellow-600 mr-2">●</span> 労働供給への影響 (限定的)</div>
+                    <div class="flex items-center"><span class="text-yellow-600 mr-2">●</span> インフレ率上昇 (中程度)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Merits Section -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span class="bg-secondary text-white rounded-full p-2 mr-3 text-sm">✓</span>
+                導入のメリット
+            </h3>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Merit 1 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">1. 貧困と不平等の是正</h4>
+                    <p class="text-gray-600 mb-4">日本のジニ係数は0.372から0.289へ改善すると予測されます。月10万円の支給で絶対的貧困はほぼ消滅します。</p>
+                    <div class="bg-gray-50 p-2 rounded text-xs text-gray-500">
+                        <strong>Evidence:</strong> アラスカ配当金制度では30年間で貧困率が年1-2%減少しました。
+                    </div>
+                </div>
+
+                <!-- Merit 2 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">2. メンタルヘルス向上</h4>
+                    <p class="text-gray-600 mb-4">生存費の不安が消えることで、ストレスやうつ症状が大幅に改善します。フィンランド実験ではストレス自己評価が23%低下しました。</p>
+                </div>
+
+                <!-- Merit 3 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">3. 雇用交渉力の向上</h4>
+                    <p class="text-gray-600 mb-4">「嫌なら辞める」選択肢を持つことで、ブラック企業からの離脱や、より良い条件への転職が可能になります。</p>
+                </div>
+
+                <!-- Merit 4 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">4. 行政コストの削減</h4>
+                    <p class="text-gray-600 mb-4">複雑な既存福祉制度（生活保護、児童手当など）を統合・簡素化することで、年間数千億円規模の行政コスト削減が見込まれます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Demerits Section -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span class="bg-danger text-white rounded-full p-2 mr-3 text-sm">✕</span>
+                導入のデメリット・リスク
+            </h3>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Demerit 1 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card border-t-4 border-danger">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">1. 財政赤字と国債依存</h4>
+                    <p class="text-gray-600 mb-4">月10万円のUBIには年間約150兆円が必要です。増税だけでは賄いきれず、大幅な国債発行による金利上昇や将来世代への負担が懸念されます。
+                    </p>
+                </div>
+
+                <!-- Demerit 2 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card border-t-4 border-warning">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">2. インフレの可能性</h4>
+                    <p class="text-gray-600 mb-4">需要の増加と供給の制約により、物価上昇が起きる可能性があります。特に「インフレが来る」という予期自体が値上げを招く恐れがあります。</p>
+                </div>
+
+                <!-- Demerit 3 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card border-t-4 border-warning">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">3. 労働供給の減少</h4>
+                    <p class="text-gray-600 mb-4">一部の層で労働意欲が低下し、GDP成長率が鈍化する可能性があります。ただし、創造的な活動や起業へのシフトという側面もあります。</p>
+                </div>
+
+                <!-- Demerit 4 -->
+                <div class="bg-surface rounded-xl shadow p-6 hover-card border-t-4 border-danger">
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">4. 国際競争力の低下</h4>
+                    <p class="text-gray-600 mb-4">財源確保のための高い所得税・法人税は、高スキル人材や企業の海外流出を招くリスクがあります。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Table -->
+        <section class="mb-12 bg-surface rounded-xl shadow-lg p-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-6">シナリオ別予測まとめ</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase">指標</th>
+                            <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase">現状</th>
+                            <th class="px-6 py-3 text-left font-medium text-primary uppercase">UBI導入後 (予測)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 font-medium">相対的貧困率</td>
+                            <td class="px-6 py-4">15.4%</td>
+                            <td class="px-6 py-4 text-green-600 font-bold">13.2% (改善)</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium">GDP成長率</td>
+                            <td class="px-6 py-4">2.0%</td>
+                            <td class="px-6 py-4 text-gray-600">1.9% (微減)</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium">インフレ率</td>
+                            <td class="px-6 py-4">1.5%</td>
+                            <td class="px-6 py-4 text-red-600 font-bold">1.9 - 2.3% (悪化)</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium">ジニ係数</td>
+                            <td class="px-6 py-4">0.372</td>
+                            <td class="px-6 py-4 text-green-600 font-bold">0.289 (改善)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Bibliography -->
+        <section class="mb-12 bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>📚</span> 参考文献・データソース
+            </h3>
+            <p class="text-sm text-gray-500 mb-4">本シミュレーターのパラメータおよび解説は、以下の公的資料・研究に基づいています。</p>
+
+            <div class="space-y-4 text-sm">
+                <!-- Government -->
+                <div>
+                    <h4 class="font-bold text-gray-700">🏛️ 政府・公的機関レポート</h4>
+                    <ul class="list-disc list-inside text-blue-600 space-y-1 ml-2">
+                        <li><a href="https://www.esri.cao.go.jp/jp/esri/archive/e_rnote/e_rnote080/e_rnote072.pdf"
+                                target="_blank" class="hover:underline">内閣府 (2022)「短期日本経済マクロ計量モデルの構造と乗数分析」</a></li>
+                        <li><a href="https://www.sangiin.go.jp/japanese/annai/chousa/keizai_prism/backnumber/h22pdf/20107903.pdf"
+                                target="_blank" class="hover:underline">内閣府 (2010)「マクロモデルからみた財政政策の効果」</a></li>
+                        <li><a href="https://www.imf.org/-/media/files/publications/fiscal-monitor/2017/october/japanese/pdf/fm-oct17-execsum-j.pdf"
+                                target="_blank" class="hover:underline">IMF (2017) "Fiscal Monitor: Tackling
+                                Inequality"</a></li>
+                    </ul>
+                </div>
+
+                <!-- Academic -->
+                <div>
+                    <h4 class="font-bold text-gray-700">🎓 論文・研究機関</h4>
+                    <ul class="list-disc list-inside text-blue-600 space-y-1 ml-2">
+                        <li><a href="https://www.ccn.yamanashi.ac.jp/~mikihikow/ito%20dissertation%202022.pdf"
+                                target="_blank" class="hover:underline">井藤幹彦 (2022)「ベーシック・インカムの導入の効果」（博士論文）</a></li>
+                        <li><a href="https://ripp-japan.com/2022/09/26/2022-09-26-01/" target="_blank"
+                                class="hover:underline">RIPP Japan (2022)「ベーシックインカム導入に関する試算」</a></li>
+                        <li><a href="https://ipss.repo.nii.ac.jp/record/288/files/sh21120106.pdf" target="_blank"
+                                class="hover:underline">一橋大学 IPSS (2010)「実験経済学から見たベーシック・インカム」</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back to Simulator -->
+        <div class="text-center">
+            <a href="index.html"
+                class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-blue-700 md:py-4 md:text-lg shadow-lg hover:shadow-xl transition-all">
+                シミュレーターで試す
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+            <p class="mb-2">&copy; 2026 Basic Income Simulator Project.</p>
+            <p class="text-xs text-gray-400">
+                Created by: General Individual (Hobby Project) / 一般個人（趣味のシミュレーション作成）<br>
+                ※本サイトおよびシミュレーターは、公的機関や特定組織とは無関係の個人の趣味として作成されたものです。<br>
+                This simulator is a personal hobby project and is not affiliated with any government or official
+                organization.
+            </p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
