@@ -9,13 +9,20 @@
 // --- Global Variables ---
 let households = [];
 let economyParams = new EconomyParameters();
-// Charts
-let fundingChart = null;
-let impactChart = null;
-let timelineChart = null; // New for Phase 2
+// Charts Container
+const charts = {
+    funding: null,
+    impact: null,
+    timeline: null,
+    agent: null
+};
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("App Initialization");
+    console.log("TimelineEngine defined?", typeof TimelineEngine !== 'undefined');
+    console.log("AgentEngine defined?", typeof AgentSimulationEnvironment !== 'undefined');
+
     // 1. Initialize Objects
     households = generateHouseholdModels();
 
@@ -34,7 +41,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Phase 2: Timeline Event Listener
-    document.getElementById('btn-run-timeline').addEventListener('click', runTimelineSimulation);
+    const btnTimeline = document.getElementById('btn-run-timeline');
+    if (btnTimeline) {
+        btnTimeline.addEventListener('click', runTimelineSimulation);
+    }
+
+    // Phase 3: Agent Based Simulation Event Listener
+    const btnRunAgent = document.getElementById('btn-run-agent-sim');
+    if (btnRunAgent) {
+        btnRunAgent.addEventListener('click', () => {
+            const originalText = btnRunAgent.innerHTML;
+            btnRunAgent.innerHTML = '<span>⏳</span> 計算中...';
+            btnRunAgent.disabled = true;
+
+            setTimeout(() => {
+                try {
+                    runAgentSimulation();
+                } catch (e) {
+                    console.error("Simulation Error:", e);
+                    // Show error in the result area instead of alert which users dislike
+                    document.getElementById('res-poverty-rate').textContent = "Error";
+                } finally {
+                    btnRunAgent.innerHTML = originalText;
+                    btnRunAgent.disabled = false;
+                }
+            }, 50);
+        });
+
+        // Run once automatically for defaults
+        setTimeout(runAgentSimulation, 1000);
+    }
 });
 
 
@@ -56,6 +92,11 @@ function runSimulation() {
 
     // Phase 2: Update Timeline Input Display
     document.getElementById('disp-bi-amount').textContent = economyParams.monthlyUBI.toLocaleString();
+
+    // Trigger Phase 2 Update if available
+    if (typeof runTimelineSimulation === 'function') {
+        runTimelineSimulation();
+    }
 }
 
 // --- Phase 2: Timeline Simulation Logic ---
@@ -83,11 +124,11 @@ function renderTimelineChart(results) {
 
     const dataGDP = results.map(r => r.gdp);
     const dataDebt = results.map(r => r.debt);
-    const dataUnemp = results.map(r => r.unemployment);
+    const dataUnemp = results.map(r => r.unemploymentRate);
 
-    if (timelineChart) timelineChart.destroy();
+    if (charts.timeline) charts.timeline.destroy();
 
-    timelineChart = new Chart(ctx, {
+    charts.timeline = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
@@ -144,6 +185,84 @@ function renderTimelineChart(results) {
             }
         }
     });
+}
+
+function runAgentSimulation() {
+    if (typeof AgentSimulationEnvironment === 'undefined') {
+        console.error("Agent Engine not loaded");
+        return;
+    }
+
+    const sim = new AgentSimulationEnvironment(200, 2); // 200 households
+    const ubiMonthly = parseFloat(economyParams.monthlyUBI); // Use economyParams
+
+    // Run for 10 years
+    const history = sim.run(10, ubiMonthly);
+
+    // Update Summary Stats (Last Step)
+    const lastStep = history[history.length - 1];
+    document.getElementById('res-avg-hours').textContent = lastStep.avgWorkHours.toFixed(1) + " h";
+    document.getElementById('res-poverty-rate').textContent = lastStep.povertyRate.toFixed(1) + " %";
+    // Happiness not in history yet? Let's check agent_engine.js.
+    // It wasn't in history push. Let's assume placeholder for now or calculate from agents if accessible
+    // Accessing sim.persons directly
+    const avgHappiness = Object.values(sim.persons).reduce((a, b) => a + b.happiness, 0) / Object.keys(sim.persons).length;
+    document.getElementById('res-happiness').textContent = avgHappiness.toFixed(2);
+
+    renderAgentChart(history);
+}
+
+// Remove local let agentChart = null; since we use global charts object now
+
+function renderAgentChart(history) {
+    const ctx = document.getElementById('chart-agent-poverty');
+    if (!ctx) return;
+
+    // Group by year (take avg or last month of year)
+    // History is monthly steps.
+    const labels = [];
+    const dataPoverty = [];
+
+    // Extract data every 12 months (Yearly snapshot)
+    for (let i = 0; i < history.length; i += 12) {
+        labels.push(`Year ${Math.floor(i / 12)}`);
+        dataPoverty.push(history[i].povertyRate);
+    }
+    // Add final year
+    labels.push(`Year 10`);
+    dataPoverty.push(history[history.length - 1].povertyRate);
+
+    const config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '貧困率 (%)',
+                    data: dataPoverty,
+                    borderColor: '#8B5CF6', // Purple
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    };
+
+    if (charts.agent) {
+        charts.agent.destroy();
+    }
+    charts.agent = new Chart(ctx, config);
 }
 
 function renderJobGroupCards(groups) {
@@ -213,9 +332,9 @@ function renderFundingForm() {
         id: 'tax-income',
         label: '所得税率上乗せ (Income Tax +)',
         min: 0, max: 20, step: 1,
-        value: params.incomeTaxRateIncrease * 100,
+        value: economyParams.incomeTaxRateIncrease * 100,
         unit: '%',
-        onChange: (val) => { params.incomeTaxRateIncrease = parseFloat(val) / 100; runSimulation(); }
+        onChange: (val) => { economyParams.incomeTaxRateIncrease = parseFloat(val) / 100; runSimulation(); }
     });
 
     // Consumption Tax Increase
@@ -223,9 +342,9 @@ function renderFundingForm() {
         id: 'tax-consumption',
         label: '消費税率上乗せ (Consumption Tax +)',
         min: 0, max: 20, step: 1,
-        value: params.consumptionTaxRateIncrease * 100,
+        value: economyParams.consumptionTaxRateIncrease * 100,
         unit: '%',
-        onChange: (val) => { params.consumptionTaxRateIncrease = parseFloat(val) / 100; runSimulation(); }
+        onChange: (val) => { economyParams.consumptionTaxRateIncrease = parseFloat(val) / 100; runSimulation(); }
     });
 }
 
@@ -272,7 +391,7 @@ function createSlider(container, config) {
  * Run the simulation and update UI
  */
 function runSimulation() {
-    engine = new SimulationEngine(params, households);
+    engine = new SimulationEngine(economyParams, households);
     const results = engine.run();
 
     updateDashboard(results);
@@ -409,7 +528,7 @@ function updateLogicModal(results) {
     // Only update if needed, but here we just update DOM elements directly
     const totalCostTrillion = results.totalAnnualCost.div(1000000000000).toFixed(1);
     const deficitTrillion = results.shortfall.div(1000000000000).toFixed(1);
-    const monthlyMan = params.monthlyUBI / 10000;
+    const monthlyMan = economyParams.monthlyUBI / 10000;
 
     const elCost = document.getElementById('logic-cost-val');
     const elUbi = document.getElementById('logic-ubi-val');
