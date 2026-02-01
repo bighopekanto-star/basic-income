@@ -12,8 +12,7 @@ class Household:
     # 型ヒントのために文字列参照を使用しないように修正、または実行時解決
     def aggregate(self, persons):
         # personsは {id: Person} の辞書を想定
-        self.income = sum(persons[pid].hourly_wage * persons[pid].work_hours * 4
-                          for pid in self.member_ids)
+        self.income = sum(persons[pid].total_income for pid in self.member_ids)
         # UBIなどの合算ロジックはPerson側で計算したincome_totalを集計するのが望ましいが
         # ここでは労働所得の合算例として実装
 

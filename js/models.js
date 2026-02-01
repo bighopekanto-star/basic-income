@@ -54,25 +54,35 @@ class Household {
  */
 class EconomyParameters {
     constructor() {
+        // === Japan 2024-2025 Fiscal Parameters (Official Data) ===
+
         // Basic Parameters
-        this.monthlyUBI = 70000; // JPY
-        this.targetPopulation = 126000000; // Total
-        this.AdultRatio = 0.82; // Approx ratio of adults
+        this.monthlyUBI = 70000; // JPY (proposed UBI amount)
+        this.targetPopulation = 124000000; // Japan population 2024
+        this.AdultRatio = 0.78; // Adults (20+) as ratio of population
 
-        // Funding Options (Tax Rates)
-        // Base rates (approximate current effective rates for simplicity in MVP)
-        this.baseIncomeTaxRate = 0.10; // 10% average effective
-        this.baseConsumptionTaxRate = 0.10; // 10%
-        this.baseCorpTaxRate = 0.23; // 23%
+        // === Current Tax Rates (Japan 2024-2025) ===
+        // Income Tax: Progressive 5-45%, effective average ~15%
+        this.baseIncomeTaxRate = 0.15;
+        // Consumption Tax: 10% (8% reduced rate for food)
+        this.baseConsumptionTaxRate = 0.10;
+        // Corporate Tax: National 23.2%, effective ~30% with local taxes
+        this.baseCorpTaxRate = 0.232;
 
-        // Increases (User inputs)
+        // === Proposed Tax Increases for UBI Funding ===
+        // Default: No increases (user will adjust)
         this.incomeTaxRateIncrease = 0.00;
         this.consumptionTaxRateIncrease = 0.00;
         this.corpTaxRateIncrease = 0.00;
 
-        // Funding amounts (JPY)
-        this.govBondIssue = 0;
-        this.welfareReduction = 0;
+        // === Fiscal Data (Trillion JPY) ===
+        // FY2025 Budget: 115.5T, Bond issuance: 28.6T
+        this.govBondIssue = 0; // User adjustable
+        this.welfareReduction = 0; // User adjustable
+
+        // === Reference Data (for calculations) ===
+        this.gdpNominal = 550; // Trillion JPY (approx)
+        this.nationalDebt = 1130; // Trillion JPY (1.13 quadrillion)
     }
 }
 

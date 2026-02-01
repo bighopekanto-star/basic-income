@@ -216,7 +216,7 @@ class TimelineEngine {
             // Note: We need to know how much was funded by bonds in the main inputs.
             // We will calculate a "Primary Balance" impact.
             // Assume the user chose parameters that result in X Trillion deficit in Year 1.
-            const initialDeficit = new Decimal(baseParams.govBondIssue || 0); // User input bond amount
+            const initialDeficit = new window.Decimal(baseParams.govBondIssue || 0); // User input bond amount
 
             // Deficit scales inversely with GDP growth (Automatic stabilizers logic simplified)
             // If GDP drops 10%, Deficit might increase due to lower tax receipt.

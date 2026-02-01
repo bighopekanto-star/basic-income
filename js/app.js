@@ -34,22 +34,31 @@ document.addEventListener('DOMContentLoaded', () => {
     runSimulation();
 
     // 4. Bind Event Listeners
-    document.getElementById('btn-show-logic').addEventListener('click', showLogicModal);
-    document.getElementById('btn-close-modal').addEventListener('click', closeLogicModal);
-    document.getElementById('logic-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'logic-modal') closeLogicModal();
-    });
+    // Note: Modal listeners are attached at the bottom of the file (lines 567-579)
 
     // Phase 2: Timeline Event Listener
     const btnTimeline = document.getElementById('btn-run-timeline');
     if (btnTimeline) {
-        btnTimeline.addEventListener('click', runTimelineSimulation);
+        console.log("Timeline button found, attaching listener");
+        btnTimeline.addEventListener('click', () => {
+            console.log("Timeline button clicked!");
+            runTimelineSimulation();
+        });
+        // Also set onclick as backup
+        btnTimeline.onclick = () => {
+            console.log("Timeline onclick triggered!");
+            runTimelineSimulation();
+        };
+    } else {
+        console.error("ERROR: Timeline button NOT FOUND!");
     }
 
     // Phase 3: Agent Based Simulation Event Listener
     const btnRunAgent = document.getElementById('btn-run-agent-sim');
     if (btnRunAgent) {
+        console.log("Agent button found, attaching listener");
         btnRunAgent.addEventListener('click', () => {
+            console.log("Agent button clicked!");
             const originalText = btnRunAgent.innerHTML;
             btnRunAgent.innerHTML = '<span>⏳</span> 計算中...';
             btnRunAgent.disabled = true;
@@ -67,9 +76,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 50);
         });
+        // Also set onclick as backup
+        btnRunAgent.onclick = () => {
+            console.log("Agent onclick triggered!");
+            runAgentSimulation();
+        };
 
         // Run once automatically for defaults
         setTimeout(runAgentSimulation, 1000);
+    } else {
+        console.error("ERROR: Agent button NOT FOUND!");
     }
 });
 
@@ -124,7 +140,7 @@ function renderTimelineChart(results) {
 
     const dataGDP = results.map(r => r.gdp);
     const dataDebt = results.map(r => r.debt);
-    const dataUnemp = results.map(r => r.unemploymentRate);
+    const dataUnemp = results.map(r => r.unemployment);
 
     if (charts.timeline) charts.timeline.destroy();
 

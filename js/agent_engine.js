@@ -1,8 +1,15 @@
 /**
- * agent_engine.js
+ * [DEPRECATED] agent_engine.js
+ * 
+ * CRITICAL WARNING:
+ * The simulation logic in this file is DEPRECATED and superseded by the Python implementation in `ubi_agent_sim/`.
+ * This file stays for legacy UI compatibility until the Python-JS bridge (API/JSON) is implemented.
+ * Do not edit logic here. Refer to `models/person.py` and `sim/environment.py`.
+ * 
  * Client-side implementation of the Agent-Based Simulation (ABS) for UBI.
- * Ported from the Python prototype to run directly in the browser.
  */
+console.warn("WARNING: agent_engine.js is deprecated. Please use the Python simulation engine.");
+
 
 // Utility for random normal distribution (Box-Muller transform)
 function randomNormal(mean, std) {
