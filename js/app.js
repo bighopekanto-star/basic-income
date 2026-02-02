@@ -573,3 +573,297 @@ if (btnShow && modal && btnClose) {
         }
     });
 }
+
+// ==========================================
+// Life Sandbox Mode (Phase 3 Visualizer)
+// ==========================================
+class SandboxManager {
+    constructor() {
+        this.simulationData = null;
+        this.currentStep = 0;
+        this.isPlaying = false;
+        this.playbackSpeed = 100; // ms per frame
+
+        // DOM Elements
+        this.canvas = document.getElementById('agent-world');
+        try {
+            this.ctx = this.canvas.getContext('2d');
+        } catch (e) { console.warn("Canvas context not available"); }
+
+        this.slider = document.getElementById('sb-timeline');
+        this.btnPlay = document.getElementById('btn-sb-play');
+        this.loading = document.getElementById('sb-loading');
+
+        // Detail Panel Elements
+        this.detailPanel = {
+            placeholder: document.getElementById('sb-detail-placeholder'),
+            content: document.getElementById('sb-detail-content'),
+            id: document.getElementById('detail-id'),
+            job: document.getElementById('detail-job'),
+            income: document.getElementById('detail-income'),
+            happiness: document.getElementById('detail-happiness'),
+            log: document.getElementById('detail-log'),
+            icon: document.getElementById('detail-icon')
+        };
+
+        this.init();
+    }
+
+    init() {
+        if (!this.canvas) return;
+
+        // Bind UI Events
+        this.btnPlay.addEventListener('click', () => this.togglePlay());
+        this.slider.addEventListener('input', (e) => {
+            this.currentStep = parseInt(e.target.value);
+            this.renderFrame();
+        });
+
+        document.getElementById('btn-run-sandbox').addEventListener('click', () => {
+            // In a real app, this would fetch an API. 
+            // Here we assume Python has run and updated the JSON.
+            // We just reload the data.
+            this.loadData();
+        });
+
+        this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+
+        // Initial Data Load (Try loading if exists)
+        this.loadData();
+    }
+
+    async loadData() {
+        if (this.loading) this.loading.classList.remove('hidden');
+
+        try {
+            const response = await fetch('simulation_data.json');
+            if (!response.ok) throw new Error("Data not found");
+
+            this.simulationData = await response.json();
+
+            // Setup Slider
+            this.slider.max = this.simulationData.timeline.length - 1;
+            this.currentStep = 0;
+            this.slider.value = 0;
+
+            console.log("Sandbox Data Loaded:", this.simulationData);
+            this.renderFrame();
+
+        } catch (err) {
+            console.warn("Sandbox data fetch error:", err);
+            // alert("Simulation data not found. Please run the backend simulation first.");
+        } finally {
+            if (this.loading) this.loading.classList.add('hidden');
+        }
+    }
+
+    togglePlay() {
+        this.isPlaying = !this.isPlaying;
+        this.btnPlay.textContent = this.isPlaying ? '⏸' : '▶';
+
+        if (this.isPlaying) {
+            this.animate();
+        }
+    }
+
+    animate() {
+        if (!this.isPlaying) return;
+
+        this.currentStep++;
+        if (this.currentStep >= this.simulationData.timeline.length) {
+            this.currentStep = 0; // Loop or stop
+            // this.isPlaying = false;
+            // this.btnPlay.textContent = '▶';
+            // return;
+        }
+
+        this.slider.value = this.currentStep;
+        this.renderFrame();
+
+        setTimeout(() => requestAnimationFrame(() => this.animate()), this.playbackSpeed);
+    }
+
+    renderFrame() {
+        if (!this.simulationData) return;
+
+        const stepData = this.simulationData.timeline[this.currentStep];
+        if (!stepData) return;
+
+        // Update UI Text
+        document.getElementById('sb-year').textContent = stepData.year;
+        document.getElementById('sb-step').textContent = stepData.step;
+
+        // Clear Canvas
+        this.ctx.fillStyle = '#111827'; // bg-gray-900
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw Agents
+        stepData.agents.forEach(agent => {
+            this.drawAgent(agent);
+        });
+    }
+
+    drawAgent(agent) {
+        // Mapping Logic
+        // X: Income (0 - 20,000,000) Log scale better? Or Linear clamped.
+        // Y: Happiness (0 - 20?? need to check range). 
+        // Let's assume Happiness is naturally around 5-15.
+
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const padding = 50;
+
+        // Income X (Linear up to 15M for visual spread)
+        const maxIncome = 15000000;
+        let xRatio = agent.income / maxIncome;
+        xRatio = Math.min(xRatio, 1.0);
+        const x = padding + xRatio * (w - 2 * padding);
+
+        // Happiness Y (Say min -10, max 30)
+        // High happiness -> Low Y (Top)
+        const minH = -5, maxH = 25;
+        let hRatio = (agent.happiness - minH) / (maxH - minH);
+        hRatio = Math.max(0, Math.min(1, hRatio));
+        const y = (h - padding) - (hRatio * (h - 2 * padding));
+
+        // Color by Job
+        this.ctx.fillStyle = this.getJobColor(agent.job);
+
+        // Draw
+        this.ctx.beginPath();
+        if (agent.is_unemployed) {
+            // Draw X or different shape
+            this.ctx.strokeStyle = this.ctx.fillStyle;
+            this.ctx.lineWidth = 2;
+            const size = 6;
+            this.ctx.moveTo(x - size, y - size);
+            this.ctx.lineTo(x + size, y + size);
+            this.ctx.moveTo(x + size, y - size);
+            this.ctx.lineTo(x - size, y + size);
+            this.ctx.stroke();
+        } else {
+            // Circle
+            this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+    }
+
+    getJobColor(jobName) {
+        switch (jobName) {
+            case 'Specialist': return '#f59e0b'; // Amber
+            case 'Admin': return '#3b82f6'; // Blue
+            case 'Service': return '#10b981'; // Emerald
+            case 'Manual': return '#ef4444'; // Red
+            default: return '#9ca3af';
+        }
+    }
+
+    handleCanvasClick(e) {
+        if (!this.simulationData) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        // Scale for canvas resolution vs css size
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+
+        // Find closest agent
+        const stepData = this.simulationData.timeline[this.currentStep];
+        let closestDist = Infinity;
+        let closestAgent = null;
+
+        // Re-calculate positions to match draw (Keep strict Sync!)
+        // Duplicated logic: Refactor if robust, but inline ok for now.
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const padding = 50;
+        const maxIncome = 15000000;
+        const minH = -5, maxH = 25;
+
+        stepData.agents.forEach(agent => {
+            let xRatio = Math.min(agent.income / maxIncome, 1.0);
+            const ax = padding + xRatio * (w - 2 * padding);
+
+            let hRatio = Math.max(0, Math.min(1, (agent.happiness - minH) / (maxH - minH)));
+            const ay = (h - padding) - (hRatio * (h - 2 * padding));
+
+            const dist = Math.sqrt((clickX - ax) ** 2 + (clickY - ay) ** 2);
+            if (dist < 15 && dist < closestDist) { // 15px radius tolerance
+                closestDist = dist;
+                closestAgent = agent;
+            }
+        });
+
+        if (closestAgent) {
+            this.showDetail(closestAgent.id);
+        }
+    }
+
+    showDetail(agentId) {
+        this.detailPanel.placeholder.classList.add('hidden');
+        this.detailPanel.content.classList.remove('hidden');
+
+        // Get generic info from current step
+        const currentData = this.simulationData.timeline[this.currentStep].agents.find(a => a.id === agentId);
+        if (!currentData) return;
+
+        this.detailPanel.id.textContent = agentId;
+        this.detailPanel.job.textContent = currentData.job;
+        this.detailPanel.income.textContent = Math.round(currentData.income).toLocaleString();
+        this.detailPanel.happiness.textContent = currentData.happiness.toFixed(1);
+
+        // Build History Log
+        // Scan full timeline for this agent events
+        this.detailPanel.log.innerHTML = '';
+
+        // Extract meaningful events: Job Change? Wage Drop? Unemployed?
+        let prev = null;
+
+        // Sample every 12 steps (Yearly) + current
+        // Or scan all steps for change? Scanning all might be heavy if 1000 steps. 120 is fine.
+
+        this.simulationData.timeline.forEach(t => {
+            const ag = t.agents.find(a => a.id === agentId);
+            if (!ag) return;
+
+            let event = null;
+            if (!prev) {
+                if (t.step === 0) event = `Start: ${ag.job}, Inc: ¥${Math.round(ag.income / 10000)}w`;
+            } else {
+                if (!prev.is_unemployed && ag.is_unemployed) {
+                    event = `<span class="text-red-500 font-bold">Lost Job</span> (AI displacement?)`;
+                } else if (prev.is_unemployed && !ag.is_unemployed) {
+                    event = `<span class="text-green-600 font-bold">Re-employed</span> as ${ag.job}`;
+                } else if (Math.abs(ag.income - prev.income) > 50000) { // Significant income jump check
+                    // Maybe too noisy - skip
+                }
+            }
+
+            if (event) {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="text-xs text-gray-400">Y${t.year} M${t.step % 12}:</span> ${event}`;
+                li.className = "pb-2 border-b border-gray-100 last:border-0";
+                this.detailPanel.log.prepend(li); // Newest top
+            }
+
+            prev = ag;
+        });
+
+        // Add current status at top
+        const statusLi = document.createElement('li');
+        statusLi.innerHTML = `<span class="font-bold text-blue-600">Current (Month ${this.currentStep}):</span> ${currentData.is_unemployed ? 'Unemployed' : 'Working'} ${Math.round(currentData.work_hours)}h/w`;
+        statusLi.className = "pb-2 border-b border-gray-100 bg-blue-50 p-2 rounded";
+        this.detailPanel.log.prepend(statusLi);
+    }
+}
+
+// Initialize Sandbox when DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Other init code runs...
+
+    // Init Sandbox
+    const sandbox = new SandboxManager();
+});
+

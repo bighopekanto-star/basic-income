@@ -1,8 +1,9 @@
 /* Global Styles */
 body {
-    background-color: #F3F4F6; /* Gray 100 fallback */
+    background-color: #F3F4F6;
+    /* Gray 100 fallback */
     background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 20%),
-                      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
 }
 
 /* Glassmorphism utility via CSS variable composition if needed, 
@@ -15,23 +16,26 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1; 
+    background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #c1c1c1; 
+    background: #c1c1c1;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8; 
+    background: #a8a8a8;
 }
 
 /* Range Slider Customization */
 input[type=range] {
-    -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
-    width: 100%; /* Specific width is required for Firefox. */
-    background: transparent; /* Otherwise white in Chrome */
+    -webkit-appearance: none;
+    /* Hides the slider so that custom slider can be made */
+    width: 100%;
+    /* Specific width is required for Firefox. */
+    background: transparent;
+    /* Otherwise white in Chrome */
 }
 
 input[type=range]::-webkit-slider-thumb {
@@ -41,8 +45,9 @@ input[type=range]::-webkit-slider-thumb {
     border-radius: 50%;
     background: #3B82F6;
     cursor: pointer;
-    margin-top: -6px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    margin-top: -6px;
+    /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 input[type=range]::-webkit-slider-runnable-track {
@@ -65,4 +70,20 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 .hover-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Canvas Crispness */
+canvas {
+    image-rendering: pixelated;
+    /* To make dots sharp */
+}
+
+/* Scrollbar for Detail Panel */
+aside .life-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+aside .life-log::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
 }

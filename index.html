@@ -361,73 +361,139 @@
                 </div>
             </div>
 
-            <!-- Phase 3: Micro-Simulation (Agent Based) -->
+            <!-- Phase 3: Life Sandbox Mode (Agent Based) -->
             <div class="lg:col-span-12 mt-12 border-t pt-12 mb-12">
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <span>🐜</span> ミクロシミュレーション (Phase 3: Agent Based)
+                        <span>🐜</span> Life Sandbox Mode
                     </h2>
                     <div
                         class="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg text-sm font-semibold border border-purple-200">
-                        個人の行動変容モデル
+                        インタラクティブ・シミュレーション
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:col-span-12 gap-8">
-                    <!-- Controls -->
-                    <div class="lg:col-span-4 space-y-6">
-                        <div class="bg-surface rounded-xl shadow-lg p-6 border border-gray-100 h-full">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <span>🔬</span> 実験設定
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-4">
-                                仮想の「個人エージェント」を生成し、UBI受給による労働時間や幸福度の変化を10年間追跡します。
-                            </p>
+                <div class="sandbox-container grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200"
+                    style="min-height: 600px;">
 
-                            <div class="bg-gray-50 p-4 rounded-lg mb-4 text-xs text-gray-600">
-                                <ul class="space-y-1">
-                                    <li>・エージェント数: 200世帯</li>
-                                    <li>・行動原理: 所得と余暇のバランスで労働時間を決定</li>
-                                    <li>・慣性: 急激な変化はせず徐々に調整</li>
+                    <!-- Sidebar: World Settings -->
+                    <aside class="lg:col-span-3 bg-gray-50 p-6 border-r border-gray-200 flex flex-col gap-6">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                            <span>🌍</span> 世界の設定
+                        </h3>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">AI Evolution Speed</label>
+                            <input type="range" id="sb-param-ai" min="0" max="2.0" step="0.1" value="1.0"
+                                class="w-full mt-2">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>Slow</span>
+                                <span>Normal</span>
+                                <span>Singularity</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Monthly UBI</label>
+                            <input type="range" id="sb-param-ubi" min="0" max="200000" step="10000" value="70000"
+                                class="w-full mt-2">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>0</span>
+                                <span id="sb-val-ubi">70,000</span>
+                                <span>200k</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto">
+                            <button id="btn-run-sandbox"
+                                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                                🔄 Run Simulation
+                            </button>
+                            <p class="text-xs text-center text-gray-400 mt-2">Python Backend Required</p>
+                        </div>
+                    </aside>
+
+                    <!-- Main: Visualizer -->
+                    <main class="lg:col-span-6 p-4 flex flex-col relative bg-gray-900">
+                        <div class="absolute top-4 left-4 z-10 flex gap-2">
+                            <div class="bg-black/50 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm">
+                                Year: <span id="sb-year" class="font-bold text-yellow-400">0</span>
+                            </div>
+                            <div class="bg-black/50 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm">
+                                Step: <span id="sb-step">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Container -->
+                        <div class="flex-grow flex items-center justify-center bg-gray-900 rounded-lg overflow-hidden relative"
+                            id="canvas-container">
+                            <canvas id="agent-world" width="800" height="600"
+                                class="w-full h-full object-contain"></canvas>
+
+                            <!-- Loading Overlay -->
+                            <div id="sb-loading"
+                                class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white hidden">
+                                <div class="animate-spin text-4xl mb-4">⚙️</div>
+                                <p>Simulating World...</p>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Controls -->
+                        <div class="mt-4 flex items-center gap-4 bg-gray-800 p-3 rounded-lg border border-gray-700">
+                            <button id="btn-sb-play" class="text-white hover:text-yellow-400 text-xl w-8">▶</button>
+                            <input type="range" id="sb-timeline" min="0" max="119" value="0"
+                                class="flex-grow h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </main>
+
+                    <!-- Detail Panel -->
+                    <aside
+                        class="lg:col-span-3 bg-white p-0 border-l border-gray-200 flex flex-col h-full overflow-hidden relative">
+                        <!-- Placeholder State -->
+                        <div id="sb-detail-placeholder"
+                            class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-6 text-center">
+                            <div class="text-4xl mb-2">👆</div>
+                            <p class="text-sm">Click an agent to view their life story.</p>
+                        </div>
+
+                        <!-- Active State -->
+                        <div id="sb-detail-content" class="hidden flex flex-col h-full">
+                            <div class="p-6 bg-gradient-to-br from-indigo-50 to-white border-b border-gray-100">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl shadow-inner bg-white border border-gray-200"
+                                        id="detail-icon">
+                                        😐
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-bold text-gray-800">Agent #<span
+                                                id="detail-id">001</span></h4>
+                                        <span id="detail-job"
+                                            class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">Admin</span>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <div class="text-xs text-gray-500">Income</div>
+                                        <div class="font-bold text-gray-900">¥<span id="detail-income">---</span></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-500">Happiness</div>
+                                        <div class="font-bold text-gray-900"><span id="detail-happiness">---</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex-grow overflow-y-auto p-4 bg-gray-50">
+                                <h5 class="text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider">Life Log</h5>
+                                <ul class="space-y-3 text-sm" id="detail-log">
+                                    <li class="pl-3 border-l-2 border-gray-300 text-gray-500 text-xs">Waiting for
+                                        data...</li>
                                 </ul>
                             </div>
-
-                            <button id="btn-run-agent-sim" onclick="runAgentSimulation()"
-                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-all flex items-center justify-center gap-2">
-                                <span>▶</span> エージェント実験を実行
-                            </button>
                         </div>
-                    </div>
-
-                    <!-- Results -->
-                    <div class="lg:col-span-8 space-y-6">
-                        <!-- Poverty Rate Chart -->
-                        <div class="bg-surface rounded-xl shadow-lg p-6">
-                            <h3 class="text-md font-semibold text-gray-800 mb-4">相対的貧困率の推移 (Agent Simulation)</h3>
-                            <div class="relative h-64 w-full">
-                                <canvas id="chart-agent-poverty"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Micro Stats text -->
-                        <div class="bg-surface rounded-xl shadow-lg p-6">
-                            <h3 class="text-md font-semibold text-gray-800 mb-2">実験結果サマリー</h3>
-                            <div class="grid grid-cols-3 gap-4 text-center">
-                                <div>
-                                    <div class="text-xs text-gray-500">平均労働時間 (週)</div>
-                                    <div class="text-xl font-bold text-gray-900" id="res-avg-hours">--- h</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs text-gray-500">最終貧困率</div>
-                                    <div class="text-xl font-bold text-gray-900" id="res-poverty-rate">--- %</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs text-gray-500">幸福度スコア</div>
-                                    <div class="text-xl font-bold text-gray-900" id="res-happiness">---</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </aside>
                 </div>
             </div>
     </main>
