@@ -628,6 +628,9 @@ class SandboxManager {
 
         this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
 
+        // Initial Draw (Empty Grid)
+        this.renderFrame();
+
         // Initial Data Load (Try loading if exists)
         this.loadData();
     }
@@ -636,10 +639,17 @@ class SandboxManager {
         if (this.loading) this.loading.classList.remove('hidden');
 
         try {
-            const response = await fetch('simulation_data.json');
-            if (!response.ok) throw new Error("Data not found");
-
-            this.simulationData = await response.json();
+            // Priority 1: Check Global Variable (loaded via js/data_loader.js)
+            if (window.SIMULATION_DATA) {
+                console.log("Loaded data from global window.SIMULATION_DATA");
+                this.simulationData = window.SIMULATION_DATA;
+            } else {
+                // Priority 2: Try Fetch (works if on server)
+                console.log("Trying fetch...");
+                const response = await fetch('simulation_data.json');
+                if (!response.ok) throw new Error("Data not found");
+                this.simulationData = await response.json();
+            }
 
             // Setup Slider
             this.slider.max = this.simulationData.timeline.length - 1;
@@ -684,7 +694,16 @@ class SandboxManager {
     }
 
     renderFrame() {
-        if (!this.simulationData) return;
+        // Always clear and draw background
+        this.ctx.fillStyle = '#111827'; // bg-gray-900
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.drawBackground();
+
+        if (!this.simulationData) {
+            // Optional: Draw "No Data" message?
+            return;
+        }
 
         const stepData = this.simulationData.timeline[this.currentStep];
         if (!stepData) return;
@@ -693,9 +712,8 @@ class SandboxManager {
         document.getElementById('sb-year').textContent = stepData.year;
         document.getElementById('sb-step').textContent = stepData.step;
 
-        // Clear Canvas
-        this.ctx.fillStyle = '#111827'; // bg-gray-900
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Draw Agent Trails (History)
+        this.drawTrails(stepData.agents);
 
         // Draw Agents
         stepData.agents.forEach(agent => {
@@ -703,28 +721,221 @@ class SandboxManager {
         });
     }
 
-    drawAgent(agent) {
-        // Mapping Logic
-        // X: Income (0 - 20,000,000) Log scale better? Or Linear clamped.
-        // Y: Happiness (0 - 20?? need to check range). 
-        // Let's assume Happiness is naturally around 5-15.
-
+    drawBackground() {
         const w = this.canvas.width;
         const h = this.canvas.height;
         const padding = 50;
 
-        // Income X (Linear up to 15M for visual spread)
+        this.ctx.save();
+
+        // 1. Grid Lines
+        this.ctx.strokeStyle = '#374151'; // gray-700
+        this.ctx.lineWidth = 1;
+        this.ctx.setLineDash([4, 4]);
+
+        // X-Axis Grid
+        for (let i = 1; i < 4; i++) {
+            const x = padding + (w - 2 * padding) * (i / 4);
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, padding);
+            this.ctx.lineTo(x, h - padding);
+            this.ctx.stroke();
+        }
+
+        // Y-Axis Grid
+        for (let i = 1; i < 4; i++) {
+            const y = padding + (h - 2 * padding) * (i / 4);
+            this.ctx.beginPath();
+            this.ctx.moveTo(padding, y);
+            this.ctx.lineTo(w - padding, y);
+            this.ctx.stroke();
+        }
+
+        // 2. Axes Lines
+        this.ctx.strokeStyle = '#9CA3AF'; // gray-400
+        this.ctx.setLineDash([]);
+        this.ctx.lineWidth = 2;
+
+        // X Axis (Bottom)
+        this.ctx.beginPath();
+        this.ctx.moveTo(padding, h - padding);
+        this.ctx.lineTo(w - padding + 10, h - padding);
+        this.ctx.stroke();
+        // X Axis Arrow
+        this.ctx.beginPath();
+        this.ctx.moveTo(w - padding, h - padding - 5);
+        this.ctx.lineTo(w - padding + 10, h - padding);
+        this.ctx.lineTo(w - padding, h - padding + 5);
+        this.ctx.fill();
+
+        // Y Axis (Left)
+        this.ctx.beginPath();
+        this.ctx.moveTo(padding, h - padding);
+        this.ctx.lineTo(padding, padding - 10);
+        this.ctx.stroke();
+        // Y Axis Arrow
+        this.ctx.beginPath();
+        this.ctx.moveTo(padding - 5, padding);
+        this.ctx.lineTo(padding, padding - 10);
+        this.ctx.lineTo(padding + 5, padding);
+        this.ctx.fill();
+
+        // 3. Labels (Make them visible)
+        this.ctx.fillStyle = '#E5E7EB'; // gray-200
+        this.ctx.font = 'bold 14px Inter, sans-serif';
+        this.ctx.textAlign = 'center';
+
+        // X Axis Label
+        this.ctx.fillText('収入 (Income) →', w / 2, h - 15);
+
+        // Y Axis Label
+        this.ctx.save();
+        this.ctx.translate(20, h / 2);
+        this.ctx.rotate(-Math.PI / 2);
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('幸福度 (Happiness) →', 0, 0);
+        this.ctx.restore();
+
+        // 4. Quadrant Background Labels (More visible but behind agents)
+        this.ctx.fillStyle = '#374151'; // gray-700
+        this.ctx.font = 'bold 24px Inter, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('充実 (Thriving)', w * 0.75, h * 0.25);
+        this.ctx.fillText('平穏 (Content)', w * 0.25, h * 0.25);
+        this.ctx.fillText('努力 (Striving)', w * 0.75, h * 0.75);
+        this.ctx.fillText('苦境 (Struggling)', w * 0.25, h * 0.75);
+
+        // 5. Legend
+        this.drawLegend();
+
+        this.ctx.restore();
+    }
+
+    drawLegend() {
+        const legendWidth = 160;
+        const legendHeight = 165;
+        const legendX = this.canvas.width - legendWidth - 15;
+        const legendY = 15;
+
+        // Background
+        this.ctx.fillStyle = 'rgba(17, 24, 39, 0.85)'; // bg-gray-900 with alpha
+        this.ctx.beginPath();
+        this.ctx.roundRect(legendX, legendY, legendWidth, legendHeight, 8);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#4B5563'; // gray-600
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = '#D1D5DB'; // gray-300
+        this.ctx.font = '12px Inter, sans-serif';
+        this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'middle';
+
+        const items = [
+            { label: '専門職 (Specialist)', color: '#f59e0b', type: 'circle' },
+            { label: '管理職 (Admin)', color: '#3b82f6', type: 'circle' },
+            { label: 'サービス (Service)', color: '#10b981', type: 'circle' },
+            { label: '現場労働 (Manual)', color: '#ef4444', type: 'circle' },
+            { label: '失業 (Unemployed)', color: '#ef4444', type: 'cross' },
+            { label: '過去の移動軌跡', color: '#9ca3af', type: 'trail' }
+        ];
+
+        items.forEach((item, index) => {
+            const y = legendY + 20 + (index * 24);
+            const xIcon = legendX + 20;
+            const xText = legendX + 35;
+
+            this.ctx.fillStyle = item.color;
+            this.ctx.strokeStyle = item.color;
+            this.ctx.beginPath();
+
+            if (item.type === 'circle') {
+                this.ctx.arc(xIcon, y, 5, 0, Math.PI * 2);
+                this.ctx.fill();
+            } else if (item.type === 'cross') {
+                this.ctx.lineWidth = 2;
+                const size = 5;
+                this.ctx.moveTo(xIcon - size, y - size);
+                this.ctx.lineTo(xIcon + size, y + size);
+                this.ctx.moveTo(xIcon + size, y - size);
+                this.ctx.lineTo(xIcon - size, y + size);
+                this.ctx.stroke();
+            } else if (item.type === 'trail') {
+                // Draw a small fading trail representation
+                this.ctx.globalAlpha = 0.2;
+                this.ctx.arc(xIcon - 10, y + 4, 2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.globalAlpha = 0.5;
+                this.ctx.arc(xIcon - 5, y + 2, 3, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.arc(xIcon, y, 4, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            this.ctx.fillStyle = '#E5E7EB';
+            this.ctx.globalAlpha = 1.0;
+            this.ctx.fillText(item.label, xText, y);
+        });
+    }
+
+    drawTrails(currentAgents) {
+        // We need history. Ideally simulationData.timeline has history.
+        // We can look back N steps.
+        const trailLength = 5;
+        if (this.currentStep < 1) return;
+
+        this.ctx.save();
+
+        // Loop back
+        for (let i = 1; i <= trailLength; i++) {
+            const stepIndex = this.currentStep - i;
+            if (stepIndex < 0) break;
+
+            const pastAgents = this.simulationData.timeline[stepIndex].agents;
+            const opacity = 0.3 * (1 - i / trailLength);
+
+            currentAgents.forEach(agent => {
+                const pastAgent = pastAgents.find(pd => pd.id === agent.id);
+                if (pastAgent) {
+                    const pos = this.getAgentPos(pastAgent);
+
+                    this.ctx.fillStyle = this.getJobColor(pastAgent.job);
+                    this.ctx.globalAlpha = opacity;
+                    this.ctx.beginPath();
+                    this.ctx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            });
+        }
+        this.ctx.restore();
+    }
+
+    getAgentPos(agent) {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const padding = 50;
+
+        // Income X (Linear up to 15M)
         const maxIncome = 15000000;
         let xRatio = agent.income / maxIncome;
         xRatio = Math.min(xRatio, 1.0);
         const x = padding + xRatio * (w - 2 * padding);
 
-        // Happiness Y (Say min -10, max 30)
-        // High happiness -> Low Y (Top)
+        // Happiness Y (Min -5, Max 25)
         const minH = -5, maxH = 25;
         let hRatio = (agent.happiness - minH) / (maxH - minH);
         hRatio = Math.max(0, Math.min(1, hRatio));
         const y = (h - padding) - (hRatio * (h - 2 * padding));
+
+        return { x, y };
+    }
+
+    drawAgent(agent) {
+        const { x, y } = this.getAgentPos(agent);
 
         // Color by Job
         this.ctx.fillStyle = this.getJobColor(agent.job);
@@ -732,10 +943,13 @@ class SandboxManager {
         // Draw
         this.ctx.beginPath();
         if (agent.is_unemployed) {
-            // Draw X or different shape
-            this.ctx.strokeStyle = this.ctx.fillStyle;
+            // Draw X
+            this.ctx.strokeStyle = this.ctx.fillStyle; // Use job color (last job) or Gray?
+            // If unemployed, usually keep last job color or turn gray. Let's keep job color but add Red outline?
+            // Or just Red X.
+            this.ctx.strokeStyle = '#EF4444'; // Red for unemployed
             this.ctx.lineWidth = 2;
-            const size = 6;
+            const size = 5;
             this.ctx.moveTo(x - size, y - size);
             this.ctx.lineTo(x + size, y + size);
             this.ctx.moveTo(x + size, y - size);
@@ -762,7 +976,6 @@ class SandboxManager {
         if (!this.simulationData) return;
 
         const rect = this.canvas.getBoundingClientRect();
-        // Scale for canvas resolution vs css size
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
 
@@ -774,23 +987,10 @@ class SandboxManager {
         let closestDist = Infinity;
         let closestAgent = null;
 
-        // Re-calculate positions to match draw (Keep strict Sync!)
-        // Duplicated logic: Refactor if robust, but inline ok for now.
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const padding = 50;
-        const maxIncome = 15000000;
-        const minH = -5, maxH = 25;
-
         stepData.agents.forEach(agent => {
-            let xRatio = Math.min(agent.income / maxIncome, 1.0);
-            const ax = padding + xRatio * (w - 2 * padding);
-
-            let hRatio = Math.max(0, Math.min(1, (agent.happiness - minH) / (maxH - minH)));
-            const ay = (h - padding) - (hRatio * (h - 2 * padding));
-
-            const dist = Math.sqrt((clickX - ax) ** 2 + (clickY - ay) ** 2);
-            if (dist < 15 && dist < closestDist) { // 15px radius tolerance
+            const { x, y } = this.getAgentPos(agent); // Reuse logic
+            const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+            if (dist < 15 && dist < closestDist) {
                 closestDist = dist;
                 closestAgent = agent;
             }

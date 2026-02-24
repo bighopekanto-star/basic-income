@@ -430,6 +430,26 @@
                             <canvas id="agent-world" width="800" height="600"
                                 class="w-full h-full object-contain"></canvas>
 
+                            <!-- Legend Overlay -->
+                            <div
+                                class="absolute bottom-4 right-4 bg-gray-800/90 p-3 rounded-lg border border-gray-700 text-xs text-gray-300">
+                                <div class="font-bold mb-2 text-gray-100">Legend</div>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                                    <div class="flex items-center gap-2"><span
+                                            class="w-2 h-2 rounded-full bg-amber-500"></span> Specialist</div>
+                                    <div class="flex items-center gap-2"><span
+                                            class="w-2 h-2 rounded-full bg-blue-500"></span> Admin</div>
+                                    <div class="flex items-center gap-2"><span
+                                            class="w-2 h-2 rounded-full bg-emerald-500"></span> Service</div>
+                                    <div class="flex items-center gap-2"><span
+                                            class="w-2 h-2 rounded-full bg-red-500"></span> Manual</div>
+                                    <div class="col-span-2 mt-1 pt-1 border-t border-gray-600 flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-gray-400">●</span> Employed
+                                        <span class="text-red-500 font-bold ml-2">×</span> Unemployed
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Loading Overlay -->
                             <div id="sb-loading"
                                 class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white hidden">
@@ -515,6 +535,7 @@
     <script src="js/engine.js" defer></script>
     <script src="js/timeline_engine.js" defer></script>
     <script src="js/agent_engine.js" defer></script>
+    <script src="js/data_loader.js" defer></script>
     <script src="js/app.js" defer></script>
 </body>
 
