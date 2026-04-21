@@ -123,7 +123,7 @@ class TimelineEngine {
         }));
 
         const biAmountMonthly = new window.Decimal(baseParams.monthlyUBI);
-        const annualBiCost = biAmountMonthly.times(12).times(126000000).div(1000000000000); // Trillion JPY
+        const annualBiCost = biAmountMonthly.times(12).times(SimConstants.POPULATION).div(SimConstants.TRILLION);
 
         for (let year = 0; year <= years; year++) {
             if (year === 0) {

@@ -13,7 +13,8 @@ def run_sim(years=5, steps_per_year=12):
         
         # 貧困率の計算
         poor_count = sum(1 for h in env.households.values() if h.is_poor)
-        poverty_rate = poor_count / len(env.households)
+        n_households = len(env.households)
+        poverty_rate = poor_count / n_households if n_households > 0 else 0.0
         poverty_rates.append(poverty_rate)
 
     return np.array(poverty_rates)

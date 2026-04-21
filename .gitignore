@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+simulation_data.json
+js/data_loader.js
+simulation_result.png
+node_modules/
+.env
+.DS_Store
+Thumbs.db

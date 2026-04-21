@@ -37,12 +37,12 @@ class SimulationEngine {
 
         // 1. Consumption Tax Revenue Calculation (Simplified)
         // Assume 1% consumption tax = ~2.5 Trillion JPY (approx rule of thumb for Japan)
-        const consumptionTaxRevenueBase = new Decimal(2500000000000); // 2.5T
+        const consumptionTaxRevenueBase = new Decimal(SimConstants.CONSUMPTION_TAX_BASE);
         const consumptionTaxRevenueNew = consumptionTaxRevenueBase.times(this.params.consumptionTaxRateIncrease * 100);
 
         // 2. Income Tax Revenue Impact (Simplified)
         // Assume 1% income tax increase measures = ~1.0 Trillion JPY revenue (highly variable, but using simple multiple for MVP)
-        const incomeTaxRevenueNew = new Decimal(1000000000000).times(this.params.incomeTaxRateIncrease * 100);
+        const incomeTaxRevenueNew = new Decimal(SimConstants.INCOME_TAX_BASE).times(this.params.incomeTaxRateIncrease * 100);
 
         // 3. Other sources
         const bondIssue = new Decimal(this.params.govBondIssue);
@@ -116,19 +116,25 @@ class SimulationEngine {
         // If funded by taxes, multiplier is low (balanced budget multiplier ~1)
         // If funded by bonds, multiplier is higher
 
-        // This is a placeholder for the advanced logic in Phase 2
-        const injection = this.results.shortfall.div(500000000000000); // Ratio to GDP (550T)
-        this.results.gdpImpact = injection.times(0.8).toNumber(); // 0.8 multiplier assumption
+        // GDP Impact: Net injection ratio to GDP * fiscal multiplier
+        const gdpBase = new Decimal(SimConstants.GDP_NOMINAL_TRILLION).times(SimConstants.TRILLION);
+        const injection = this.results.shortfall.div(gdpBase);
+        // Fiscal multiplier: 0.8 for tax-funded, higher for bond-funded
+        const bondRatio = this.results.fundingBreakdown.bonds.div(
+            this.results.totalAnnualCost.isZero() ? 1 : this.results.totalAnnualCost
+        );
+        const multiplier = new Decimal(0.8).plus(bondRatio.times(0.4));
+        this.results.gdpImpact = injection.times(multiplier).toNumber();
 
-        // Poverty Rate: Heuristic based on low-income gains
-        const lowIncomeGain = this.households
-            .filter(h => h.incomeLevel === 'low')
-            .reduce((sum, h) => sum + h.simulationResults.netChange.toNumber(), 0);
-
-        if (lowIncomeGain > 0) {
-            this.results.povertyRateChange = -2.0; // Placeholder: improves by 2%
-        } else {
-            this.results.povertyRateChange = 0.5; // Worsens
+        // Poverty Rate: Based on proportion of low-income households with net positive change
+        const lowIncomeHH = this.households.filter(h => h.incomeLevel === 'low' || h.incomeLevel === 'lower_mid');
+        if (lowIncomeHH.length === 0) {
+            this.results.povertyRateChange = 0;
+            return;
         }
+        const positiveCount = lowIncomeHH.filter(h => h.simulationResults.netChange.gt(0)).length;
+        const positiveRatio = positiveCount / lowIncomeHH.length;
+        // If more low-income HH benefit, poverty rate improves more
+        this.results.povertyRateChange = -positiveRatio * 3.5; // Up to -3.5% improvement
     }
 }

@@ -28,10 +28,12 @@ def main():
     
     for t in range(total_steps):
         env.step()
-        # Poverty logic (duplicated from runner for now to keep main simple, or just use what we need)
-        poor_count = sum(1 for h in env.households.values() if h.is_poor)
-        poverty_rate = poor_count / len(env.households)
-        poverty_rates.append(poverty_rate)
+        n_households = len(env.households)
+        if n_households > 0:
+            poor_count = sum(1 for h in env.households.values() if h.is_poor)
+            poverty_rates.append(poor_count / n_households)
+        else:
+            poverty_rates.append(0.0)
         
     print("Simulation completed.")
     print(f"Final Poverty Rate: {poverty_rates[-1]:.2%}")

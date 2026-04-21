@@ -58,7 +58,7 @@ class EconomyParameters {
 
         // Basic Parameters
         this.monthlyUBI = 70000; // JPY (proposed UBI amount)
-        this.targetPopulation = 124000000; // Japan population 2024
+        this.targetPopulation = SimConstants.POPULATION;
         this.AdultRatio = 0.78; // Adults (20+) as ratio of population
 
         // === Current Tax Rates (Japan 2024-2025) ===

@@ -19,10 +19,6 @@ const charts = {
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("App Initialization");
-    console.log("TimelineEngine defined?", typeof TimelineEngine !== 'undefined');
-    console.log("AgentEngine defined?", typeof AgentSimulationEnvironment !== 'undefined');
-
     // 1. Initialize Objects
     households = generateHouseholdModels();
 
@@ -39,26 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Phase 2: Timeline Event Listener
     const btnTimeline = document.getElementById('btn-run-timeline');
     if (btnTimeline) {
-        console.log("Timeline button found, attaching listener");
-        btnTimeline.addEventListener('click', () => {
-            console.log("Timeline button clicked!");
-            runTimelineSimulation();
-        });
-        // Also set onclick as backup
-        btnTimeline.onclick = () => {
-            console.log("Timeline onclick triggered!");
-            runTimelineSimulation();
-        };
-    } else {
-        console.error("ERROR: Timeline button NOT FOUND!");
+        btnTimeline.addEventListener('click', () => runTimelineSimulation());
     }
 
     // Phase 3: Agent Based Simulation Event Listener
     const btnRunAgent = document.getElementById('btn-run-agent-sim');
     if (btnRunAgent) {
-        console.log("Agent button found, attaching listener");
         btnRunAgent.addEventListener('click', () => {
-            console.log("Agent button clicked!");
             const originalText = btnRunAgent.innerHTML;
             btnRunAgent.innerHTML = '<span>⏳</span> 計算中...';
             btnRunAgent.disabled = true;
@@ -67,8 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     runAgentSimulation();
                 } catch (e) {
-                    console.error("Simulation Error:", e);
-                    // Show error in the result area instead of alert which users dislike
                     document.getElementById('res-poverty-rate').textContent = "Error";
                 } finally {
                     btnRunAgent.innerHTML = originalText;
@@ -76,44 +57,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 50);
         });
-        // Also set onclick as backup
-        btnRunAgent.onclick = () => {
-            console.log("Agent onclick triggered!");
-            runAgentSimulation();
-        };
 
         // Run once automatically for defaults
         setTimeout(runAgentSimulation, 1000);
-    } else {
-        console.error("ERROR: Agent button NOT FOUND!");
     }
 });
 
 
 // --- Core Simulation Logic (Static) ---
-function runSimulation() {
-    // 1. Get Values from UI
-    updateParamsFromUI();
 
-    // 2. Perform Calculations for each household
-    calculateHouseholdImpacts();
-
-    // 3. Aggregate Macro Results
-    const macroResults = calculateMacroResults();
-
-    // 4. Update Dashboard
-    updateKPIs(macroResults);
-    updateCharts(macroResults);
-    updateDetailedTable();
-
-    // Phase 2: Update Timeline Input Display
-    document.getElementById('disp-bi-amount').textContent = economyParams.monthlyUBI.toLocaleString();
-
-    // Trigger Phase 2 Update if available
-    if (typeof runTimelineSimulation === 'function') {
-        runTimelineSimulation();
-    }
+// Debounce utility
+function debounce(fn, delay) {
+    let timer = null;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
 }
+
+const debouncedRunSimulation = debounce(() => runSimulation(), 300);
 
 // --- Phase 2: Timeline Simulation Logic ---
 function runTimelineSimulation() {
@@ -335,7 +297,7 @@ function renderParametersForm() {
         min: 0, max: 200000, step: 5000,
         value: economyParams.monthlyUBI,
         unit: '円',
-        onChange: (val) => { economyParams.monthlyUBI = parseInt(val); runSimulation(); }
+        onChange: (val) => { economyParams.monthlyUBI = parseInt(val); debouncedRunSimulation(); }
     });
 }
 
@@ -350,7 +312,7 @@ function renderFundingForm() {
         min: 0, max: 20, step: 1,
         value: economyParams.incomeTaxRateIncrease * 100,
         unit: '%',
-        onChange: (val) => { economyParams.incomeTaxRateIncrease = parseFloat(val) / 100; runSimulation(); }
+        onChange: (val) => { economyParams.incomeTaxRateIncrease = parseFloat(val) / 100; debouncedRunSimulation(); }
     });
 
     // Consumption Tax Increase
@@ -360,7 +322,7 @@ function renderFundingForm() {
         min: 0, max: 20, step: 1,
         value: economyParams.consumptionTaxRateIncrease * 100,
         unit: '%',
-        onChange: (val) => { economyParams.consumptionTaxRateIncrease = parseFloat(val) / 100; runSimulation(); }
+        onChange: (val) => { economyParams.consumptionTaxRateIncrease = parseFloat(val) / 100; debouncedRunSimulation(); }
     });
 }
 
@@ -391,7 +353,8 @@ function createSlider(container, config) {
     input.max = config.max;
     input.step = config.step;
     input.value = config.value;
-    input.className = 'w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer'; // Tailwind classes
+    input.className = 'w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer';
+    input.setAttribute('aria-label', config.label);
 
     input.addEventListener('input', (e) => {
         valueDisplay.textContent = `${Number(e.target.value).toLocaleString()} ${config.unit}`;
@@ -407,7 +370,7 @@ function createSlider(container, config) {
  * Run the simulation and update UI
  */
 function runSimulation() {
-    engine = new SimulationEngine(economyParams, households);
+    const engine = new SimulationEngine(economyParams, households);
     const results = engine.run();
 
     updateDashboard(results);
@@ -421,7 +384,7 @@ function runSimulation() {
  */
 function updateDashboard(results) {
     // Trillions of Yen
-    const totalCostTrillion = results.totalAnnualCost.div(1000000000000).toFixed(1);
+    const totalCostTrillion = results.totalAnnualCost.div(SimConstants.TRILLION).toFixed(1);
     document.getElementById('kpi-total-cost').textContent = `${totalCostTrillion}`;
 
     document.getElementById('kpi-gdp-impact').textContent = `${results.gdpImpact > 0 ? '+' : ''}${results.gdpImpact.toFixed(2)}%`;
@@ -442,7 +405,7 @@ function updateDashboard(results) {
     }
 
     // Format Funding Shortfall/Surplus for internal tracking/debugging or future UI
-    // console.log(`Shortfall: ${results.shortfall.div(1000000000000).toFixed(1)}T`);
+    // console.log(`Shortfall: ${results.shortfall.div(SimConstants.TRILLION).toFixed(1)}T`);
 }
 
 /**
@@ -453,10 +416,10 @@ function updateCharts(results) {
 
     // Data preparation
     const fundingData = [
-        results.fundingBreakdown.consumptionTax.div(1000000000000).toNumber(),
-        results.fundingBreakdown.incomeTax.div(1000000000000).toNumber(),
-        results.fundingBreakdown.welfareCuts.div(1000000000000).toNumber(),
-        Math.max(0, results.shortfall.div(1000000000000).toNumber()) // Deficit treated as Bonds for now
+        results.fundingBreakdown.consumptionTax.div(SimConstants.TRILLION).toNumber(),
+        results.fundingBreakdown.incomeTax.div(SimConstants.TRILLION).toNumber(),
+        results.fundingBreakdown.welfareCuts.div(SimConstants.TRILLION).toNumber(),
+        Math.max(0, results.shortfall.div(SimConstants.TRILLION).toNumber()) // Deficit treated as Bonds for now
     ];
 
     if (charts.funding) {
@@ -542,8 +505,8 @@ function updateDetailedTable() {
  */
 function updateLogicModal(results) {
     // Only update if needed, but here we just update DOM elements directly
-    const totalCostTrillion = results.totalAnnualCost.div(1000000000000).toFixed(1);
-    const deficitTrillion = results.shortfall.div(1000000000000).toFixed(1);
+    const totalCostTrillion = results.totalAnnualCost.div(SimConstants.TRILLION).toFixed(1);
+    const deficitTrillion = results.shortfall.div(SimConstants.TRILLION).toFixed(1);
     const monthlyMan = economyParams.monthlyUBI / 10000;
 
     const elCost = document.getElementById('logic-cost-val');
@@ -588,7 +551,7 @@ class SandboxManager {
         this.canvas = document.getElementById('agent-world');
         try {
             this.ctx = this.canvas.getContext('2d');
-        } catch (e) { console.warn("Canvas context not available"); }
+        } catch (e) { /* Canvas context not available */ }
 
         this.slider = document.getElementById('sb-timeline');
         this.btnPlay = document.getElementById('btn-sb-play');
@@ -641,11 +604,9 @@ class SandboxManager {
         try {
             // Priority 1: Check Global Variable (loaded via js/data_loader.js)
             if (window.SIMULATION_DATA) {
-                console.log("Loaded data from global window.SIMULATION_DATA");
                 this.simulationData = window.SIMULATION_DATA;
             } else {
                 // Priority 2: Try Fetch (works if on server)
-                console.log("Trying fetch...");
                 const response = await fetch('simulation_data.json');
                 if (!response.ok) throw new Error("Data not found");
                 this.simulationData = await response.json();
@@ -656,11 +617,9 @@ class SandboxManager {
             this.currentStep = 0;
             this.slider.value = 0;
 
-            console.log("Sandbox Data Loaded:", this.simulationData);
             this.renderFrame();
 
         } catch (err) {
-            console.warn("Sandbox data fetch error:", err);
             // alert("Simulation data not found. Please run the backend simulation first.");
         } finally {
             if (this.loading) this.loading.classList.add('hidden');
@@ -883,14 +842,14 @@ class SandboxManager {
     }
 
     drawTrails(currentAgents) {
-        // We need history. Ideally simulationData.timeline has history.
-        // We can look back N steps.
         const trailLength = 5;
         if (this.currentStep < 1) return;
 
         this.ctx.save();
 
-        // Loop back
+        // Build ID -> agent map for current agents for quick lookup
+        const currentAgentMap = new Map(currentAgents.map(a => [a.id, a]));
+
         for (let i = 1; i <= trailLength; i++) {
             const stepIndex = this.currentStep - i;
             if (stepIndex < 0) break;
@@ -898,18 +857,16 @@ class SandboxManager {
             const pastAgents = this.simulationData.timeline[stepIndex].agents;
             const opacity = 0.3 * (1 - i / trailLength);
 
-            currentAgents.forEach(agent => {
-                const pastAgent = pastAgents.find(pd => pd.id === agent.id);
-                if (pastAgent) {
-                    const pos = this.getAgentPos(pastAgent);
+            for (const pastAgent of pastAgents) {
+                if (!currentAgentMap.has(pastAgent.id)) continue;
+                const pos = this.getAgentPos(pastAgent);
 
-                    this.ctx.fillStyle = this.getJobColor(pastAgent.job);
-                    this.ctx.globalAlpha = opacity;
-                    this.ctx.beginPath();
-                    this.ctx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-            });
+                this.ctx.fillStyle = this.getJobColor(pastAgent.job);
+                this.ctx.globalAlpha = opacity;
+                this.ctx.beginPath();
+                this.ctx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
         }
         this.ctx.restore();
     }
@@ -1015,14 +972,9 @@ class SandboxManager {
         this.detailPanel.happiness.textContent = currentData.happiness.toFixed(1);
 
         // Build History Log
-        // Scan full timeline for this agent events
         this.detailPanel.log.innerHTML = '';
 
-        // Extract meaningful events: Job Change? Wage Drop? Unemployed?
         let prev = null;
-
-        // Sample every 12 steps (Yearly) + current
-        // Or scan all steps for change? Scanning all might be heavy if 1000 steps. 120 is fine.
 
         this.simulationData.timeline.forEach(t => {
             const ag = t.agents.find(a => a.id === agentId);
@@ -1033,19 +985,30 @@ class SandboxManager {
                 if (t.step === 0) event = `Start: ${ag.job}, Inc: ¥${Math.round(ag.income / 10000)}w`;
             } else {
                 if (!prev.is_unemployed && ag.is_unemployed) {
-                    event = `<span class="text-red-500 font-bold">Lost Job</span> (AI displacement?)`;
+                    event = `Lost Job (AI displacement?)`;
                 } else if (prev.is_unemployed && !ag.is_unemployed) {
-                    event = `<span class="text-green-600 font-bold">Re-employed</span> as ${ag.job}`;
-                } else if (Math.abs(ag.income - prev.income) > 50000) { // Significant income jump check
-                    // Maybe too noisy - skip
+                    event = `Re-employed as ${ag.job}`;
                 }
             }
 
             if (event) {
                 const li = document.createElement('li');
-                li.innerHTML = `<span class="text-xs text-gray-400">Y${t.year} M${t.step % 12}:</span> ${event}`;
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'text-xs text-gray-400';
+                timeSpan.textContent = `Y${t.year} M${t.step % 12}: `;
+
+                const eventSpan = document.createElement('span');
+                if (event.startsWith('Lost Job')) {
+                    eventSpan.className = 'text-red-500 font-bold';
+                } else if (event.startsWith('Re-employed')) {
+                    eventSpan.className = 'text-green-600 font-bold';
+                }
+                eventSpan.textContent = event;
+
+                li.appendChild(timeSpan);
+                li.appendChild(eventSpan);
                 li.className = "pb-2 border-b border-gray-100 last:border-0";
-                this.detailPanel.log.prepend(li); // Newest top
+                this.detailPanel.log.prepend(li);
             }
 
             prev = ag;
@@ -1053,7 +1016,14 @@ class SandboxManager {
 
         // Add current status at top
         const statusLi = document.createElement('li');
-        statusLi.innerHTML = `<span class="font-bold text-blue-600">Current (Month ${this.currentStep}):</span> ${currentData.is_unemployed ? 'Unemployed' : 'Working'} ${Math.round(currentData.work_hours)}h/w`;
+        const statusLabel = document.createElement('span');
+        statusLabel.className = 'font-bold text-blue-600';
+        statusLabel.textContent = `Current (Month ${this.currentStep}): `;
+        const statusText = document.createTextNode(
+            `${currentData.is_unemployed ? 'Unemployed' : 'Working'} ${Math.round(currentData.work_hours)}h/w`
+        );
+        statusLi.appendChild(statusLabel);
+        statusLi.appendChild(statusText);
         statusLi.className = "pb-2 border-b border-gray-100 bg-blue-50 p-2 rounded";
         this.detailPanel.log.prepend(statusLi);
     }
