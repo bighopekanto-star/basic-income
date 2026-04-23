@@ -14,7 +14,9 @@ const charts = {
     funding: null,
     impact: null,
     timeline: null,
-    agent: null
+    agent: null,
+    macroSocial: null,
+    macroFiscal: null
 };
 
 // --- Initialization ---
@@ -196,17 +198,13 @@ function renderAgentChart(history) {
     const ctx = document.getElementById('chart-agent-poverty');
     if (!ctx) return;
 
-    // Group by year (take avg or last month of year)
-    // History is monthly steps.
     const labels = [];
     const dataPoverty = [];
 
-    // Extract data every 12 months (Yearly snapshot)
     for (let i = 0; i < history.length; i += 12) {
         labels.push(`Year ${Math.floor(i / 12)}`);
         dataPoverty.push(history[i].povertyRate);
     }
-    // Add final year
     labels.push(`Year 10`);
     dataPoverty.push(history[history.length - 1].povertyRate);
 
@@ -218,7 +216,7 @@ function renderAgentChart(history) {
                 {
                     label: '貧困率 (%)',
                     data: dataPoverty,
-                    borderColor: '#8B5CF6', // Purple
+                    borderColor: '#8B5CF6',
                     backgroundColor: 'rgba(139, 92, 246, 0.1)',
                     tension: 0.3,
                     fill: true
@@ -229,18 +227,166 @@ function renderAgentChart(history) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
+                y: { beginAtZero: true, max: 100 }
             }
         }
     };
 
-    if (charts.agent) {
-        charts.agent.destroy();
-    }
+    if (charts.agent) charts.agent.destroy();
     charts.agent = new Chart(ctx, config);
+}
+
+// --- Macro Charts (from Python backend data) ---
+function renderMacroCharts(timeline) {
+    if (!timeline || timeline.length === 0) return;
+
+    const hasMacro = timeline[0].macro !== undefined;
+    if (!hasMacro) return;
+
+    // Update KPI cards with final values
+    const finalMacro = timeline[timeline.length - 1].macro;
+    const kpiPoverty = document.getElementById('kpi-poverty');
+    const kpiGini = document.getElementById('kpi-gini');
+    const kpiUnemp = document.getElementById('kpi-unemployment');
+    const kpiHappiness = document.getElementById('kpi-happiness');
+    const kpiInflation = document.getElementById('kpi-inflation');
+    const kpiDebt = document.getElementById('kpi-debt');
+
+    if (kpiPoverty) kpiPoverty.textContent = (finalMacro.poverty_rate * 100).toFixed(1) + '%';
+    if (kpiGini) kpiGini.textContent = finalMacro.gini.toFixed(3);
+    if (kpiUnemp) kpiUnemp.textContent = (finalMacro.unemployment_rate * 100).toFixed(1) + '%';
+    if (kpiHappiness) kpiHappiness.textContent = finalMacro.avg_happiness.toFixed(1);
+    if (kpiInflation) kpiInflation.textContent = (finalMacro.inflation_rate * 12).toFixed(2) + '%';
+    if (kpiDebt) {
+        const debtBillion = finalMacro.gov_debt / 1e9;
+        kpiDebt.textContent = debtBillion >= 1 ? debtBillion.toFixed(1) + 'B' : (finalMacro.gov_debt / 1e6).toFixed(0) + 'M';
+    }
+
+    // Yearly data extraction
+    const yearlyLabels = [];
+    const yearlyGini = [];
+    const yearlyUnemp = [];
+    const yearlyPoverty = [];
+    const yearlyHappiness = [];
+    const yearlyRevenue = [];
+    const yearlyUbiCost = [];
+    const yearlyDebt = [];
+    const yearlyInflation = [];
+
+    for (let i = 0; i < timeline.length; i += 12) {
+        const m = timeline[i].macro;
+        yearlyLabels.push('Year ' + Math.floor(i / 12));
+        yearlyGini.push(m.gini);
+        yearlyUnemp.push(m.unemployment_rate * 100);
+        yearlyPoverty.push(m.poverty_rate * 100);
+        yearlyHappiness.push(m.avg_happiness);
+        yearlyRevenue.push(m.gov_revenue / 1e6);
+        yearlyUbiCost.push(m.gov_ubi_cost / 1e6);
+        yearlyDebt.push(m.gov_debt / 1e6);
+        yearlyInflation.push(m.inflation_rate * 12);
+    }
+    // Final year
+    const fm = timeline[timeline.length - 1].macro;
+    yearlyLabels.push('Year 10');
+    yearlyGini.push(fm.gini);
+    yearlyUnemp.push(fm.unemployment_rate * 100);
+    yearlyPoverty.push(fm.poverty_rate * 100);
+    yearlyHappiness.push(fm.avg_happiness);
+    yearlyRevenue.push(fm.gov_revenue / 1e6);
+    yearlyUbiCost.push(fm.gov_ubi_cost / 1e6);
+    yearlyDebt.push(fm.gov_debt / 1e6);
+    yearlyInflation.push(fm.inflation_rate * 12);
+
+    // Social Indicators Chart
+    const ctxSocial = document.getElementById('chart-macro-social');
+    if (ctxSocial) {
+        if (charts.macroSocial) charts.macroSocial.destroy();
+        charts.macroSocial = new Chart(ctxSocial, {
+            type: 'line',
+            data: {
+                labels: yearlyLabels,
+                datasets: [
+                    {
+                        label: '貧困率 (%)',
+                        data: yearlyPoverty,
+                        borderColor: '#8B5CF6',
+                        backgroundColor: 'rgba(139,92,246,0.1)',
+                        tension: 0.3, fill: true, yAxisID: 'y'
+                    },
+                    {
+                        label: '失業率 (%)',
+                        data: yearlyUnemp,
+                        borderColor: '#F59E0B',
+                        tension: 0.3, yAxisID: 'y'
+                    },
+                    {
+                        label: 'ジニ係数',
+                        data: yearlyGini,
+                        borderColor: '#3B82F6',
+                        tension: 0.3, yAxisID: 'y1'
+                    },
+                    {
+                        label: '年間インフレ (%)',
+                        data: yearlyInflation,
+                        borderColor: '#EF4444',
+                        borderDash: [5, 5],
+                        tension: 0.3, yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { position: 'left', title: { display: true, text: '%' }, beginAtZero: true },
+                    y1: { position: 'right', title: { display: true, text: 'ジニ係数' }, grid: { drawOnChartArea: false }, min: 0, max: 1 }
+                }
+            }
+        });
+    }
+
+    // Fiscal Chart
+    const ctxFiscal = document.getElementById('chart-macro-fiscal');
+    if (ctxFiscal) {
+        if (charts.macroFiscal) charts.macroFiscal.destroy();
+        charts.macroFiscal = new Chart(ctxFiscal, {
+            type: 'line',
+            data: {
+                labels: yearlyLabels,
+                datasets: [
+                    {
+                        label: '税収 (M JPY)',
+                        data: yearlyRevenue,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16,185,129,0.1)',
+                        tension: 0.3, fill: true, yAxisID: 'y'
+                    },
+                    {
+                        label: 'UBI支出 (M JPY)',
+                        data: yearlyUbiCost,
+                        borderColor: '#F97316',
+                        backgroundColor: 'rgba(249,115,22,0.1)',
+                        tension: 0.3, fill: true, yAxisID: 'y'
+                    },
+                    {
+                        label: '累積債務 (M JPY)',
+                        data: yearlyDebt,
+                        borderColor: '#DC2626',
+                        borderDash: [5, 5],
+                        tension: 0.3, yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { position: 'left', title: { display: true, text: '月次 (M JPY)' }, beginAtZero: true },
+                    y1: { position: 'right', title: { display: true, text: '累積債務 (M JPY)' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
 }
 
 function renderJobGroupCards(groups) {
@@ -619,6 +765,11 @@ class SandboxManager {
 
             this.renderFrame();
 
+            // Render macro charts from backend data
+            if (typeof renderMacroCharts === 'function') {
+                renderMacroCharts(this.simulationData.timeline);
+            }
+
         } catch (err) {
             // alert("Simulation data not found. Please run the backend simulation first.");
         } finally {
@@ -670,6 +821,26 @@ class SandboxManager {
         // Update UI Text
         document.getElementById('sb-year').textContent = stepData.year;
         document.getElementById('sb-step').textContent = stepData.step;
+
+        // Update KPI cards for current step
+        if (stepData.macro) {
+            const m = stepData.macro;
+            const kpiP = document.getElementById('kpi-poverty');
+            const kpiG = document.getElementById('kpi-gini');
+            const kpiU = document.getElementById('kpi-unemployment');
+            const kpiH = document.getElementById('kpi-happiness');
+            const kpiI = document.getElementById('kpi-inflation');
+            const kpiD = document.getElementById('kpi-debt');
+            if (kpiP) kpiP.textContent = (m.poverty_rate * 100).toFixed(1) + '%';
+            if (kpiG) kpiG.textContent = m.gini.toFixed(3);
+            if (kpiU) kpiU.textContent = (m.unemployment_rate * 100).toFixed(1) + '%';
+            if (kpiH) kpiH.textContent = m.avg_happiness.toFixed(1);
+            if (kpiI) kpiI.textContent = (m.inflation_rate * 12).toFixed(2) + '%';
+            if (kpiD) {
+                const db = m.gov_debt / 1e9;
+                kpiD.textContent = db >= 1 ? db.toFixed(1) + 'B' : (m.gov_debt / 1e6).toFixed(0) + 'M';
+            }
+        }
 
         // Draw Agent Trails (History)
         this.drawTrails(stepData.agents);

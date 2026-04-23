@@ -520,6 +520,50 @@
                         </div>
                     </aside>
                 </div>
+
+                <!-- Macro Statistics Dashboard -->
+                <div class="mt-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="bg-white rounded-lg shadow p-4 border border-gray-100">
+                        <div class="text-xs font-bold text-gray-400 uppercase">貧困率</div>
+                        <div class="text-2xl font-bold text-purple-600 mt-1" id="kpi-poverty">--</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 border border-gray-100">
+                        <div class="text-xs font-bold text-gray-400 uppercase">ジニ係数</div>
+                        <div class="text-2xl font-bold text-blue-600 mt-1" id="kpi-gini">--</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 border border-gray-100">
+                        <div class="text-xs font-bold text-gray-400 uppercase">失業率</div>
+                        <div class="text-2xl font-bold text-amber-600 mt-1" id="kpi-unemployment">--</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 border border-gray-100">
+                        <div class="text-xs font-bold text-gray-400 uppercase">平均幸福度</div>
+                        <div class="text-2xl font-bold text-emerald-600 mt-1" id="kpi-happiness">--</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 border border-gray-100">
+                        <div class="text-xs font-bold text-gray-400 uppercase">年間インフレ率</div>
+                        <div class="text-2xl font-bold text-red-600 mt-1" id="kpi-inflation">--</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 border border-gray-100">
+                        <div class="text-xs font-bold text-gray-400 uppercase">政府債務</div>
+                        <div class="text-2xl font-bold text-orange-600 mt-1" id="kpi-debt">--</div>
+                    </div>
+                </div>
+
+                <!-- Macro Charts Row -->
+                <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">社会指標の推移</h3>
+                        <div style="height: 300px;">
+                            <canvas id="chart-macro-social"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">財政収支の推移</h3>
+                        <div style="height: 300px;">
+                            <canvas id="chart-macro-fiscal"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
     </main>
 

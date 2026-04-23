@@ -15,8 +15,10 @@ class Person:
     is_unemployed: bool = False
     unemployed_duration: int = 0
     happiness: float = 0.0
-    total_income: float = 0.0 # Added for Household aggregation compatibility
-    saving: float = 0.0       # Added for compatibility/future use
+    total_income: float = 0.0
+    saving: float = 0.0
+    tax_paid: float = 0.0
+    disposable_income: float = 0.0
 
     def calculate_progressive_tax(self, annual_income):
         """
@@ -128,11 +130,14 @@ class Person:
 
         self.total_income = monthly_labor_income + policy.ubi_amount
         disposable_income = self.total_income - monthly_tax
-        
+        self.tax_paid = monthly_tax
+        self.disposable_income = disposable_income
+
         self.saving += disposable_income * 0.2
-        
-        # Real Consumption (Deflated by Consumption Tax)
-        real_consumption = disposable_income / (1 + policy.consumption_tax_rate)
+
+        # Real Consumption (Deflated by Consumption Tax + Inflation)
+        price_level = env_state.get('price_level', 1.0)
+        real_consumption = disposable_income / (price_level * (1 + policy.consumption_tax_rate))
         
         basic_need = 150000
         
